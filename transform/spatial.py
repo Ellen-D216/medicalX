@@ -3,31 +3,14 @@ import numpy as np
 from typing import Sequence, Tuple, Union
 
 from data.image import Image, Subject
-from .composite import CompositeImageFilter
+from .transform import Transform
 from config import *
-
-
-class SpatialTransform:
-    def __init__(self) -> None:
-        self.total_filter = CompositeImageFilter([])
-
-    def __call__(self, image:Union[sitk.Image, Image, Subject]) -> Image:
-        if len(self.total_filter):
-            if isinstance(image, (Image, sitk.Image)):
-                return self.total_filter(image)
-            elif isinstance(image, Subject):
-                subj = image.clone()
-                for name, value in image.images.items():
-                    subj[name] = self.total_filter(value)
-                return subj
-        else:
-            raise ValueError("You don't give filters!")
 
 
 constant_pad = sitk.ConstantPad
 mirror_pad = sitk.MirrorPad
 wrap_pad = sitk.WrapPad
-class Pad(SpatialTransform):
+class Pad(Transform):
     def __init__(self, mode:str, low:Tuple[int, int], up:Tuple[int, int],
                  pad_value=0, decay:float=1.) -> None:
         super().__init__()
@@ -45,7 +28,7 @@ class Pad(SpatialTransform):
 
 
 crop = sitk.Crop
-class Crop(SpatialTransform):
+class Crop(Transform):
     def __init__(self, low:Tuple[int, int], up:Tuple[int, int]) -> None:
         super().__init__()
         crop_filter = sitk.CropImageFilter()
@@ -55,7 +38,7 @@ class Crop(SpatialTransform):
 
 
 flip = sitk.Flip
-class Flip(SpatialTransform):
+class Flip(Transform):
     def __init__(self, axes:Sequence[bool]) -> None:
         super().__init__()
         flip_filter = sitk.FlipImageFilter()

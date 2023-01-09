@@ -113,8 +113,9 @@ class Painter:
                 grid[y*height:(y+1)*height-padding, x*width:(x+1)*width-padding, :] = image[k]
                 k += 1
 
+        cmap = 'gray' if channels == 1 else None
         plt.figure(**fig_args)
-        plt.imshow(grid, cmap="gray", vmin=image.min(), vmax=image.max())
+        plt.imshow(grid, cmap=cmap, vmin=image.min(), vmax=image.max())
         plt.axis('off')
         if save_path is not None:
             plt.savefig(save_path)
