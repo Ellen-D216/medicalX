@@ -112,3 +112,14 @@ BSplineResamplerOrder2 = sitk.sitkBSplineResamplerOrder2
 BSplineResamplerOrder4 = sitk.sitkBSplineResamplerOrder4
 
 BSplineResamplerOrder5 = sitk.sitkBSplineResamplerOrder5
+
+
+##########################
+###   Transform Type     
+##########################
+
+Translation = 'TranslationTransform'
+Scale = 'ScaleTransform'
+Similarity = 'SimilarityTransform'
+Euler = 'EulerTransform'
+Affine = 'AffineTransform'

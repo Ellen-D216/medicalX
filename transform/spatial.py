@@ -44,3 +44,9 @@ class Flip(Transform):
         flip_filter = sitk.FlipImageFilter()
         flip_filter.SetFlipAxes(axes)
         self.total_filter.append(flip_filter)
+
+
+resample = sitk.Resample
+class Resample(Transform):
+    def __init__(self) -> None:
+        super().__init__()

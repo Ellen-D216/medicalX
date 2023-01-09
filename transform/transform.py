@@ -2,6 +2,7 @@ import SimpleITK as sitk
 from typing import List, Union, Tuple
 
 from data.image import Image, Subject
+from config import Translation, Scale, Similarity, Euler, Affine
 
 
 class CompositeImageFilter:
@@ -71,3 +72,59 @@ class CompositeTransform:
         for transform in self.composite:
             image = transform(image, transform_keys)
         return Image(image) if isinstance(image, sitk.Image) else image
+
+
+class TransformFactory:
+    @staticmethod
+    def register(transform_type:str, dim:int, *args):
+        if transform_type == Translation:
+            return TransformFactory.get_translation_transform(dim, *args)
+        elif transform_type == Scale:
+            return TransformFactory.get_translation_transform(dim, *args)
+        elif transform_type == Similarity:
+            return TransformFactory.get_similarity_transform(dim, *args)
+        elif transform_type == Euler:
+            return TransformFactory.get_euler_transform(dim, *args)
+        elif transform_type == Affine:
+            return TransformFactory.get_affine_transform(*args)
+
+    @staticmethod
+    def get_translation_transform(dim, *args):
+        '''
+        args: VectorDouble offset
+        '''
+        return sitk.TranslationTransform(dim, *args)
+
+    @staticmethod
+    def get_scale_transform(dim, *args):
+        '''
+        args: VectorDouble scale
+        '''
+        return sitk.ScaleTransform(dim, *args)
+
+    @staticmethod
+    def get_similarity_transform(dim, *args):
+        '''
+        args: double scaleFactor, double angle, VectorDouble translation, VectorDouble fixedCenter
+        '''
+        if dim == 2:
+            return sitk.Similarity2DTransform(*args)
+        elif dim == 3:
+            return sitk.Similarity3DTransform(*args)
+
+    @staticmethod
+    def get_euler_transform(dim, *args):
+        '''
+        args: VectorDouble fixedCenter, double angle, VectorDouble translation
+        '''
+        if dim == 2:
+            return sitk.Euler2DTransform(*args)
+        elif dim == 3:
+            return sitk.Euler3DTransform(*args)
+
+    @staticmethod
+    def get_affine_transform(*args):
+        '''
+        args: VectorDouble matrix, VectorDouble translation, VectorDouble fixedCenter
+        '''
+        return sitk.AffineTransform(*args)

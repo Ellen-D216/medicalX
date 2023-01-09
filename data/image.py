@@ -26,6 +26,10 @@ class Image(sitk.Image):
     @property
     def array(self):
         return sitk.GetArrayFromImage(self)
+
+    @property
+    def dim(self):
+        return self.GetDimension()
     
     @property
     def spacing(self):
