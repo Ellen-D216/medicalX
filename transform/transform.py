@@ -31,22 +31,27 @@ class CompositeImageFilter:
 
 
 class Transform:
-    def __init__(self) -> None:
+    def __init__(self, transform_keys:Tuple[str]=None) -> None:
         self.total_filter = CompositeImageFilter([])
+        self.keys = transform_keys
 
-    def __call__(self, image:Union[sitk.Image, Image, Subject], transform_keys:Tuple[str]=None):
+    def __call__(self, image:Union[sitk.Image, Image, Subject]):
         if len(self.total_filter):
             if isinstance(image, (Image, sitk.Image)):
                 return self.total_filter(image)
             elif isinstance(image, Subject):
-                subj = image.clone()
-                keys = tuple(subj.keys()) if transform_keys is None else transform_keys
-                for name, value in image.images.items():
-                    if name in keys:
-                        subj[name] = self.total_filter(value)
-                return subj
+                return self._subject_apply(image)
         else:
             raise ValueError("You don't give filters!")
+
+    def _subject_apply(self, subj:Subject):
+            subj_ = subj.clone()
+            keys = tuple(subj.keys()) if self.keys is None else self.keys
+            for name, value in subj_.images.items():
+                if name in keys:
+                    subj_[name] = self.total_filter(value)
+            return subj_
+
 
 
 class CompositeTransform:
@@ -68,9 +73,9 @@ class CompositeTransform:
     def __getitem__(self, index):
         return self.composite[index]
 
-    def __call__(self, image:Union[sitk.Image, Image, Subject], transform_keys:Tuple[str]=None):
+    def __call__(self, image:Union[sitk.Image, Image, Subject]):
         for transform in self.composite:
-            image = transform(image, transform_keys)
+            image = transform(image)
         return Image(image) if isinstance(image, sitk.Image) else image
 
 
