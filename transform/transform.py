@@ -1,135 +1,159 @@
+from typing import Sequence, overload
 import SimpleITK as sitk
-from typing import List, Union, Tuple
 
-from data.image import Image, Subject
-from config import Translation, Scale, Similarity, Euler, Affine
+class TranslationTransform(sitk.TranslationTransform):
+    @overload
+    def __init__(self, dim:int, offset:Sequence[float]=None):
+        offset = [0]*dim if offset is None else offset
+        super().__init__(dim, offset)
 
+    @overload
+    def __init__(self, transform:sitk.TranslationTransform):
+        super().__init__(transform)
 
-class CompositeImageFilter:
-    def __init__(self, filters:List[sitk.ImageFilter]) -> None:
-        self.composite = filters
+    @property
+    def offset(self):
+        return self.GetOffset()
 
-    def append(self, filter:sitk.ImageFilter):
-        self.composite.append(filter)
-
-    def pop(self, index):
-        self.composite.pop(index)
-
-    def clear(self):
-        self.composite.clear()
-
-    def __len__(self):
-        return len(self.composite)
-
-    def __getitem__(self, index):
-        return self.composite[index]
-
-    def __call__(self, image:Union[sitk.Image, Image]):
-        for filter in self.composite:
-            image = filter.Execute(image)
-        return Image(image)
+    @offset.setter
+    def offset(self, value:Sequence[float]):
+        self.SetOffset(value)
 
 
-class Transform:
-    def __init__(self, transform_keys:Tuple[str]=None) -> None:
-        self.total_filter = CompositeImageFilter([])
-        self.keys = transform_keys
+class ScaleTransform(sitk.ScaleTransform):
+    @overload
+    def __init__(self, dim:int, scale:Sequence[float]=None):
+        scale = [1]*dim if scale is None else scale
+        super().__init__(dim, scale)
 
-    def __call__(self, image:Union[sitk.Image, Image, Subject]):
-        if len(self.total_filter):
-            if isinstance(image, (Image, sitk.Image)):
-                return self.total_filter(image)
-            elif isinstance(image, Subject):
-                return self._subject_apply(image)
-        else:
-            raise ValueError("You don't give filters!")
+    @overload
+    def __init__(self, transform:sitk.ScaleTransform):
+        super().__init__(transform)
 
-    def _subject_apply(self, subj:Subject):
-            subj_ = subj.clone()
-            keys = tuple(subj.keys()) if self.keys is None else self.keys
-            for name, value in subj_.images.items():
-                if name in keys:
-                    subj_[name] = self.total_filter(value)
-            return subj_
+    @property
+    def scale(self):
+        return self.GetScale()
 
+    @scale.setter
+    def scale(self, value:Sequence[float]):
+        self.SetScale(value)
 
+    @property
+    def center(self):
+        return self.GetCenter()
 
-class CompositeTransform:
-    def __init__(self, transform:List[Transform]) -> None:
-        self.composite = transform
+    @center.setter
+    def center(self, value:Sequence[float]):
+        self.SetCenter(value)
 
-    def append(self, transform:Transform):
-        self.composite.append(transform)
-
-    def pop(self, index):
-        self.composite.pop(index)
-
-    def clear(self):
-        self.composite.clear()
-
-    def __len__(self):
-        return len(self.composite)
-
-    def __getitem__(self, index):
-        return self.composite[index]
-
-    def __call__(self, image:Union[sitk.Image, Image, Subject]):
-        for transform in self.composite:
-            image = transform(image)
-        return Image(image) if isinstance(image, sitk.Image) else image
+    @property
+    def matrix(self):
+        return self.GetMatrix()
 
 
-class TransformFactory:
-    @staticmethod
-    def register(transform_type:str, dim:int, *args):
-        if transform_type == Translation:
-            return TransformFactory.get_translation_transform(dim, *args)
-        elif transform_type == Scale:
-            return TransformFactory.get_translation_transform(dim, *args)
-        elif transform_type == Similarity:
-            return TransformFactory.get_similarity_transform(dim, *args)
-        elif transform_type == Euler:
-            return TransformFactory.get_euler_transform(dim, *args)
-        elif transform_type == Affine:
-            return TransformFactory.get_affine_transform(*args)
+class Similarity2DTransform(sitk.Similarity2DTransform):
+    @overload
+    def __init__(self):
+        super().__init__()
 
-    @staticmethod
-    def get_translation_transform(dim, *args):
-        '''
-        args: VectorDouble offset
-        '''
-        return sitk.TranslationTransform(dim, *args)
+    @overload
+    def __init__(self, scale:float, angle:float=0., translation:Sequence[float]=[0., 0.], center:Sequence[float]=[0., 0.]):
+        super().__init__(scale, angle, translation, center)
 
-    @staticmethod
-    def get_scale_transform(dim, *args):
-        '''
-        args: VectorDouble scale
-        '''
-        return sitk.ScaleTransform(dim, *args)
+    @overload
+    def __init__(self, transform:sitk.Similarity2DTransform):
+        super().__init__(transform)
 
-    @staticmethod
-    def get_similarity_transform(dim, *args):
-        '''
-        args: double scaleFactor, double angle, VectorDouble translation, VectorDouble fixedCenter
-        '''
-        if dim == 2:
-            return sitk.Similarity2DTransform(*args)
-        elif dim == 3:
-            return sitk.Similarity3DTransform(*args)
+    @property
+    def scale(self):
+        return self.GetScale()
 
-    @staticmethod
-    def get_euler_transform(dim, *args):
-        '''
-        args: VectorDouble fixedCenter, double angle, VectorDouble translation
-        '''
-        if dim == 2:
-            return sitk.Euler2DTransform(*args)
-        elif dim == 3:
-            return sitk.Euler3DTransform(*args)
+    @scale.setter
+    def scale(self, value:Sequence[float]):
+        self.SetScale(value)
 
-    @staticmethod
-    def get_affine_transform(*args):
-        '''
-        args: VectorDouble matrix, VectorDouble translation, VectorDouble fixedCenter
-        '''
-        return sitk.AffineTransform(*args)
+    @property
+    def center(self):
+        return self.GetCenter()
+
+    @center.setter
+    def center(self, value:Sequence[float]):
+        self.SetCenter(value)
+
+    @property
+    def angle(self):
+        return self.GetAngle()
+
+    @angle.setter
+    def angle(self, value:float):
+        self.SetAngle(value)
+
+    @property
+    def translation(self):
+        return self.GetTranslation()
+
+    @translation.setter
+    def translation(self, value:Sequence[float]):
+        self.SetTranslation(value)
+
+    @property
+    def matrix(self):
+        return self.GetMatrix()
+
+    @matrix.setter
+    def matrix(self, value:Sequence[float]):
+        self.SetMatrix(value)
+
+
+class Similarity3DTransform(sitk.Similarity3DTransform):
+    @overload
+    def __init__(self):
+        super().__init__()
+
+    @overload
+    def __init__(self, scale:float, versor:Sequence[float], translation:Sequence[float]=[0., 0., 0.], center:Sequence[float]=[0., 0., 0.]):
+        super().__init__(scale, versor, translation, center)
+
+    @overload
+    def __init__(self, transform:sitk.Similarity3DTransform):
+        super().__init__(transform)
+
+    @property
+    def scale(self):
+        return self.GetScale()
+
+    @scale.setter
+    def scale(self, value:Sequence[float]):
+        self.SetScale(value)
+
+    @property
+    def center(self):
+        return self.GetCenter()
+
+    @center.setter
+    def center(self, value:Sequence[float]):
+        self.SetCenter(value)
+
+    @property
+    def rotation(self):
+        return self.GetVersor()
+
+    @rotation.setter
+    def rotation(self, value:Sequence[float]):
+        self.SetRotation(value)
+
+    @property
+    def translation(self):
+        return self.GetTranslation()
+
+    @translation.setter
+    def translation(self, value:Sequence[float]):
+        self.SetTranslation(value)
+
+    @property
+    def matrix(self):
+        return self.GetMatrix()
+
+    @matrix.setter
+    def matrix(self, value:Sequence[float]):
+        self.SetMatrix(value)

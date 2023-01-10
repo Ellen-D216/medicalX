@@ -3,11 +3,10 @@ import numpy as np
 from typing import Tuple, Union
 
 from data.image import Image, Subject
-from .transform import Transform, CompositeImageFilter
+from .utils import Transform, CompositeImageFilter
 from config import Scalar, Label
 
 
-clip = sitk.Clamp
 class Clip(Transform):
     def __init__(self, low:float=-1000, up:float=1000, cast=None, transform_keys:Tuple[str]=None) -> None:
         super().__init__(transform_keys)
@@ -17,9 +16,11 @@ class Clip(Transform):
         if cast is not None:
             clip_filter.SetOutputPixelType(cast)
         self.total_filter.append(clip_filter)
+def clip(image:Union[sitk.Image, Image, Subject], low:float=-1000, up:float=1000, 
+         cast=None, transform_keys:Tuple[str]=None):
+    return Clip(low, up, cast, transform_keys)(image)
 
 
-rescale = sitk.RescaleIntensity
 class Rescale(Transform):
     def __init__(self, out_min=0, out_max=255, 
                  percentiles: Tuple[float, float] = (0, 100), cast=None, transform_keys:Tuple[str]=None) -> None:
@@ -48,11 +49,15 @@ class Rescale(Transform):
         cutoff = np.percentile(array.ravel(), self.percentiles)
         np.clip(array, *cutoff, out=array)
         return sitk.GetImageFromArray(array).CopyInformation(image)
+def rescale(image:Union[sitk.Image, Image, Subject], out_min=0, out_max=255, 
+            percentiles: Tuple[float, float] = (0, 100), cast=None, 
+            transform_keys:Tuple[str]=None):
+    return Rescale(out_min, out_max, percentiles, cast, transform_keys)(image)
 
 
-
-normalize = sitk.Normalize
 class Normalize(Transform):
     def __init__(self, transform_keys:Tuple[str]=None) -> None:
         super().__init__(transform_keys)
         self.total_filter.append(sitk.NormalizeImageFilter())
+def normalize(image:Union[sitk.Image, Image, Subject], transform_keys:Tuple[str]=None):
+    return Normalize(transform_keys)(image)

@@ -1,11 +1,14 @@
-from .composite import CompositeImageFilter
+from .utils import CompositeImageFilter, CompositeTransform
 from .intensity import (
     Rescale, rescale,
     Clip, clip,
     Normalize, normalize
 )
 from .spatial import (
-    Pad, constant_pad, mirror_pad, wrap_pad,
+    Pad, pad,
     Crop, crop,
     Flip, flip
+)
+from .transform import (
+    TranslationTransform, ScaleTransform, Similarity2DTransform
 )
