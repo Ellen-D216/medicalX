@@ -1,5 +1,5 @@
 import SimpleITK as sitk
-from typing import List, Union, Tuple
+from typing import Callable, List, Union, Tuple
 
 from data.image import Image, Subject
 
@@ -43,12 +43,13 @@ class Transform:
         else:
             raise ValueError("You don't give filters!")
 
-    def _subject_apply(self, subj:Subject):
+    def _subject_apply(self, subj:Subject, apply:Callable=None):
             subj_ = subj.clone()
             keys = tuple(subj.keys()) if self.keys is None else self.keys
+            call = self.total_filter if apply is None else apply
             for name, value in subj_.images.items():
                 if name in keys:
-                    subj_[name] = self.total_filter(value)
+                    subj_[name] = call(value)
             return subj_
 
 
