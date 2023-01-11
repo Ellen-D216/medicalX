@@ -70,6 +70,12 @@ class Image(sitk.Image):
         self.direction = info['direction']
 
     @property
+    def center(self):
+        return np.asarray(
+            self.TransformContinuousIndexToPhysicalPoint(self.size / 2.)
+        )
+
+    @property
     def shape(self):
         return self.array.shape
 

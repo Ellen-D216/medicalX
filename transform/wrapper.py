@@ -2,6 +2,12 @@ from typing import Sequence, overload
 import numpy as np
 import SimpleITK as sitk
 
+
+class IdentityTransform(sitk.Transform):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 class TranslationTransform(sitk.TranslationTransform):
     @overload
     def __init__(self, dim:int, offset:Sequence[float]=None):

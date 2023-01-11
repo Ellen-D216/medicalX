@@ -9,6 +9,6 @@ from .spatial import (
     Crop, crop,
     Flip, flip
 )
-from .transform import (
+from .wrapper import (
     TranslationTransform, ScaleTransform, Similarity2DTransform
 )
