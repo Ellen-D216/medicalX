@@ -42,7 +42,7 @@ class Transform:
                 return self._subject_apply(image)
         else:
             raise ValueError("You don't give filters!")
-
+ 
     def _subject_apply(self, subj:Subject, apply:Callable=None):
             subj_ = subj.clone()
             keys = tuple(subj.keys()) if self.keys is None else self.keys

@@ -1,8 +1,9 @@
 import SimpleITK as sitk
 import numpy as np
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Tuple, Union, overload
 
 from data.image import Image, Subject
+from transform.transform import TranslationTransform
 from .utils import Transform
 from config import *
 
@@ -52,10 +53,37 @@ def flip(image:Union[sitk.Image, Image, Subject], axes:Sequence[bool], transform
     return Flip(axes, transform_keys)(image)
 
 
-# resample = sitk.Resample
 class Resample(Transform):
-    def __init__(
-        self, 
-        transform_keys:Tuple[str]=None
-    ) -> None:
+    @overload
+    def __init__(self, transform, interpolator, cast=None, transform_keys:Tuple[str]=None):
         super().__init__(transform_keys)
+        resample_filter = self._get_base_resample_filter(transform, interpolator, cast)
+        self.total_filter.append(resample_filter)
+
+    @overload
+    def __init__(self, transform, interpolator, reference:Union[Image, sitk.Image], 
+                 cast=None, transform_keys:Tuple[str]=None):
+        super().__init__(transform_keys)
+        resample_filter = self._get_base_resample_filter(transform, interpolator, cast)
+        resample_filter.SetReferenceImage(reference)
+        self.total_filter.append(resample_filter)
+
+    @overload
+    def __init__(self, transform, interpolator, 
+                 out_size:Sequence[int], out_spacing:Sequence[float], out_origin:Sequence[float], out_direction:Sequence[float],
+                 cast=None, transform_keys:Tuple[str]=None):
+        super().__init__(transform_keys)
+        resample_filter = self._get_base_resample_filter(transform, interpolator, cast)
+        resample_filter.SetSize(out_size)
+        resample_filter.SetOutputOrigin(out_origin)
+        resample_filter.SetOutputSpacing(out_spacing)
+        resample_filter.SetOutputDirection(out_direction)
+        self.total_filter.append(resample_filter)
+
+    def _get_base_resample_filter(self, transform, interpolator, cast):
+        resample_filter = sitk.ResampleImageFilter()
+        resample_filter.SetTransform(transform)
+        resample_filter.SetInterpolator(interpolator)
+        if cast is not None:
+            resample_filter.SetOutputPixelType(cast)
+        return resample_filter
