@@ -22,6 +22,7 @@ class Pad(Transform):
         pad_filter.SetPadLowerBound(low)
         pad_filter.SetPadUpperBound(up)
         self.total_filter.append(pad_filter)
+
 def pad(image:Union[sitk.Image, Image, Subject], mode:str, low:Tuple[int, int], up:Tuple[int, int],
         pad_value=0, decay:float=1., transform_keys:Tuple[str]=None):
     return Pad(mode, low, up, pad_value, decay, transform_keys)(image)
@@ -34,6 +35,7 @@ class Crop(Transform):
         crop_filter.SetLowerBoundaryCropSize(low)
         crop_filter.SetUpperBoundaryCropSize(up)
         self.total_filter.append(crop_filter)
+
 def crop(image:Union[sitk.Image, Image, Subject], low:Tuple[int, int], 
          up:Tuple[int, int], transform_keys:Tuple[str]=None):
     return Crop(low, up, transform_keys)(image)
@@ -45,6 +47,7 @@ class Flip(Transform):
         flip_filter = sitk.FlipImageFilter()
         flip_filter.SetFlipAxes(axes)
         self.total_filter.append(flip_filter)
+
 def flip(image:Union[sitk.Image, Image, Subject], axes:Sequence[bool], transform_keys:Tuple[str]=None):
     return Flip(axes, transform_keys)(image)
 
