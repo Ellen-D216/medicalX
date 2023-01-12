@@ -1,11 +1,10 @@
-from asyncio.trsock import TransportSocket
 import SimpleITK as sitk
 import numpy as np
 from typing import Sequence, Tuple, Union, overload
 
 from data.image import Image, Subject
-from .utils import Transform, ResampleUtils
-from config import DataType, InterpolatorType, ImageType, PadType, KernelType
+from .utils import Transform, ResampleUtils, TransformFactory
+from config import TransformType, InterpolatorType, ImageType, PadType, KernelType
 
 
 class Pad(Transform):
@@ -100,7 +99,7 @@ class Resize(Transform):
         interpolator = InterpolatorType.Linear if image.type == ImageType.Scalar else InterpolatorType.NearestNeighbor
         
         resample_filter = sitk.ResampleImageFilter()
-        resample_filter.SetTransform(sitk.Transform())
+        resample_filter.SetTransform(TransformFactory.register(TransformType.Identity))
         resample_filter.SetInterpolator(interpolator)
         resample_filter.SetSize(self.target_size)
         resample_filter.SetOutputSpacing(target_spacing)
@@ -108,11 +107,6 @@ class Resize(Transform):
         resample_filter.SetOutputDirection(image.GetDirection())
         self.total_filter.append(resample_filter)
         return super().__call__(image)
-
-
-class Affine(Transform):
-    def __init__(self, transform_keys: Tuple[str] = None) -> None:
-        super().__init__(transform_keys)
 
 
 class BinaryMorphologicalOpen(Transform):

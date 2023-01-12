@@ -3,8 +3,7 @@ import numpy as np
 from typing import Tuple, Union
 
 from data.image import Image, Subject
-from .utils import Transform, CompositeImageFilter
-from config import Scalar, Label
+from .utils import Transform
 
 
 class Clip(Transform):

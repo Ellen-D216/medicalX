@@ -1,4 +1,4 @@
-from .utils import CompositeImageFilter, CompositeTransform
+from .utils import Composite
 from .intensity import (
     Rescale, rescale,
     Clip, clip,
@@ -8,7 +8,4 @@ from .spatial import (
     Pad, pad,
     Crop, crop,
     Flip, flip
-)
-from .wrapper import (
-    TranslationTransform, ScaleTransform, Similarity2DTransform
 )

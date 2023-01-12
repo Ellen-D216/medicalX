@@ -25,24 +25,18 @@ class Composite:
     def __getitem__(self, index):
         return self.composite[index]
 
-
-class CompositeImageFilter(Composite):
-    def __call__(self, image:Union[sitk.Image, Image]):
-        for filter in self.composite:
-            image = filter.Execute(image)
-        return Image(image)
-
-
-class CompositeTransform(Composite):
     def __call__(self, image:Union[sitk.Image, Image, Subject]):
-        for transform in self.composite:
-            image = transform(image)
-        return Image(image) if isinstance(image, sitk.Image) else image
+        for plugin in self.composite:
+            if isinstance(plugin, sitk.ImageFilter):
+                image = plugin.Execute(image)
+            else:
+                image = plugin(image)
+        return Image(image)
 
 
 class Transform:
     def __init__(self, transform_keys:Tuple[str]=None) -> None:
-        self.total_filter = CompositeImageFilter([])
+        self.total_filter = Composite([])
         self.keys = transform_keys
 
     def __call__(self, image:Union[sitk.Image, Image, Subject]):
@@ -155,15 +149,3 @@ class ResampleUtils:
         return np.asarray([
             image.GetSize()[i] * image.GetSpacing()[i] / target_size[i] for i in range(image.GetDimension())
         ])
-
-
-class RandomApply:
-    def __init__(self, transform, p:float=0.5) -> None:
-        self.p = p
-        self.transform = transform
-
-    def __call__(self, image:Union[Image, sitk.Image, Subject]) -> Any:
-        if np.random.rand() > self.p:
-            return self.transform(image)
-        else:
-            return image
