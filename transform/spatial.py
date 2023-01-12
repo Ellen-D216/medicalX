@@ -86,3 +86,107 @@ class Resample(Transform):
         if cast is not None:
             resample_filter.SetOutputPixelType(cast)
         return resample_filter
+
+
+class Resize(Transform):
+    def __init__(self, transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+
+
+class Affine(Transform):
+    def __init__(self, transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+
+
+class BinaryMorphologicalOpen(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball,
+                 background:float = 0, foreground:float = 1,
+                 transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        open_filter = sitk.BinaryMorphologicalOpeningImageFilter()
+        open_filter.SetBackgroundValue(background)
+        open_filter.SetForegroundValue(foreground)
+        open_filter.SetKernelType(kernel)
+        open_filter.SetKernelRadius(radius)
+        self.total_filter.append(open_filter)
+
+
+class BinaryMorphologicalClose(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball,
+                 foreground:float = 1, transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        close_filter = sitk.BinaryMorphologicalClosingImageFilter()
+        close_filter.SetForegroundValue(foreground)
+        close_filter.SetKernelType(kernel)
+        close_filter.SetKernelRadius(radius)
+        self.total_filter.append(close_filter)
+
+
+class GrayscaleMorphologicalOpen(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball, safe_border:bool = True,
+                 transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        open_filter = sitk.GrayscaleMorphologicalOpeningImageFilter()
+        open_filter.SetKernelRadius(radius)
+        open_filter.SetKernelType(kernel)
+        open_filter.SetSafeBorder(safe_border)
+        self.total_filter.append(open_filter)
+
+
+class GrayScaleMorphologicalClose(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball, safe_border:bool = True,
+                 transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        close_filter = sitk.GrayscaleMorphologicalClosingImageFilter()
+        close_filter.SetKernelRadius(radius)
+        close_filter.SetKernelType(kernel)
+        close_filter.SetSafeBorder(safe_border)
+        self.total_filter.append(close_filter)
+
+
+class BinaryMorphologicalErode(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball,
+                 background:float = 0, foreground:float = 1, boundary_to_foreground:bool = True,
+                 transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        erode_filter = sitk.BinaryErodeImageFilter()
+        erode_filter.SetBackgroundValue(background)
+        erode_filter.SetForegroundValue(foreground)
+        erode_filter.SetKernelRadius(radius)
+        erode_filter.SetKernelType(kernel)
+        erode_filter.SetBoundaryToForeground(boundary_to_foreground)
+        self.total_filter.append(erode_filter)
+
+
+class BinaryMorphologicalDilate(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball,
+                 background:float = 0, foreground:float = 1, boundary_to_foreground:bool = True,
+                 transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        dilate_filter = sitk.BinaryDilateImageFilter()
+        dilate_filter.SetBackgroundValue(background)
+        dilate_filter.SetForegroundValue(foreground)
+        dilate_filter.SetKernelRadius(radius)
+        dilate_filter.SetKernelType(kernel)
+        dilate_filter.SetBoundaryToForeground(boundary_to_foreground)
+        self.total_filter.append(dilate_filter)
+
+
+class GrayscaleMorphologicalErode(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball,
+                 transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        erode_filter = sitk.GrayscaleErodeImageFilter()
+        erode_filter.SetKernelRadius(radius)
+        erode_filter.SetKernelType(kernel)
+        self.total_filter.append(erode_filter)
+
+
+class GrayscaleMorphologicalDilate(Transform):
+    def __init__(self, radius:Union[int, Sequence[int]], kernel=Ball,
+                 transform_keys: Tuple[str] = None) -> None:
+        super().__init__(transform_keys)
+        erode_filter = sitk.GrayscaleDilateImageFilter()
+        erode_filter.SetKernelRadius(radius)
+        erode_filter.SetKernelType(kernel)
+        self.total_filter.append(erode_filter)

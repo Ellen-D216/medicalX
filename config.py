@@ -7,6 +7,13 @@ Scalar = 'scalar'
 Label = 'label'
 
 ##########################
+###      Pad Type     ###
+##########################
+PadConstant = 'constant'
+PadMirror = 'mirror'
+PadWrap = 'wrap'
+
+##########################
 ###      Data Type     ###
 ##########################
 Uint8 = sitk.sitkUInt8
@@ -62,14 +69,7 @@ LabelUInt32 = sitk.sitkLabelUInt32
 LabelUInt64 = sitk.sitkLabelUInt64
 
 ##########################
-###      Pad Type     ###
-##########################
-PadConstant = 'constant'
-PadMirror = 'mirror'
-PadWrap = 'wrap'
-
-##########################
-###   Interpolation Type     
+###   Interpolator Type     
 ##########################
 NearestNeighbor = sitk.sitkNearestNeighbor
 
@@ -113,3 +113,28 @@ BSplineResamplerOrder4 = sitk.sitkBSplineResamplerOrder4
 
 BSplineResamplerOrder5 = sitk.sitkBSplineResamplerOrder5
 
+##########################
+###   kernel Type     
+##########################
+
+Annulus = sitk.sitkAnnulus
+
+Ball = sitk.sitkBall
+
+Box = sitk.sitkBox
+
+Cross = sitk.sitkCross
+
+Polygon3 = sitk.sitkPolygon3
+
+Polygon4 = sitk.sitkPolygon4
+
+Polygon5 = sitk.sitkPolygon5
+
+Polygon6 = sitk.sitkPolygon6
+
+Polygon7 = sitk.sitkPolygon7
+
+Polygon8 = sitk.sitkPolygon8
+
+Polygon9 = sitk.sitkPolygon9

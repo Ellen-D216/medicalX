@@ -54,13 +54,13 @@ class Transform:
             raise ValueError("You don't give filters!")
  
     def _subject_apply(self, subj:Subject, apply:Callable=None):
-            subj_ = subj.clone()
-            keys = tuple(subj.keys()) if self.keys is None else self.keys
-            call = self.total_filter if apply is None else apply
-            for name, value in subj_.images.items():
-                if name in keys:
-                    subj_[name] = call(value)
-            return subj_
+        subj_ = subj.clone()
+        keys = tuple(subj.keys()) if self.keys is None else self.keys
+        call = self.total_filter if apply is None else apply
+        for name, value in subj_.images.items():
+            if name in keys:
+                subj_[name] = call(value)
+        return subj_
 
 
 class ResampleUtils:
@@ -129,3 +129,15 @@ class ResampleUtils:
         return np.asarray([
             image.GetSize()[i] * image.GetSpacing()[i] / target_size[i] for i in range(image.GetDimension())
         ])
+
+
+class RandomApply:
+    def __init__(self, transform, p:float=0.5) -> None:
+        self.p = p
+        self.transform = transform
+
+    def __call__(self, image:Union[Image, sitk.Image, Subject]) -> Any:
+        if np.random.rand() > self.p:
+            return self.transform(image)
+        else:
+            return image
