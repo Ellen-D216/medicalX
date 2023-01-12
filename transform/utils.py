@@ -3,6 +3,7 @@ import numpy as np
 from typing import Any, Callable, List, Sequence, Union, Tuple
 
 from data.image import Image, Subject
+from config import TransformType
 
 
 class Composite:
@@ -61,6 +62,31 @@ class Transform:
             if name in keys:
                 subj_[name] = call(value)
         return subj_
+
+
+class TransformFactory:
+    @staticmethod
+    def register(transform_type:TransformType, *args):
+        if transform_type == TransformType.Identity:
+            return sitk.Transform(*args)
+        elif transform_type == TransformType.Translation:
+            return sitk.TranslationTransform(*args)
+        elif transform_type == TransformType.Scale:
+            return sitk.ScaleTransform(*args)
+        elif transform_type == TransformType.Versor:
+            return sitk.VersorTransform(*args)
+        elif transform_type == TransformType.Similarity:
+            if args[0] == 2:
+                return sitk.Similarity2DTransform(*args[1:])
+            elif args[0] == 3:
+                return sitk.Similarity3DTransform(*args[1:])
+        elif transform_type == TransformType.Euler:
+            if args[0] == 2:
+                return sitk.Euler2DTransform(*args[1:])
+            elif args[0] == 3:
+                return sitk.Euler3DTransform(*args[1:])
+        elif transform_type == TransformType.Affine:
+            return sitk.AffineTransform(*args)
 
 
 class ResampleUtils:

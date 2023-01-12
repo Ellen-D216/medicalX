@@ -5,14 +5,14 @@ import numpy as np
 from torch import from_numpy
 
 from . import io
-from config import Scalar, Label
+from config import ImageType
 
 class Image(sitk.Image):
     def __init__(
         self,
         image: Union[str, List[str], sitk.Image],
         orientation: str = 'LPS',
-        type: str = Scalar
+        type: str = ImageType.Scalar
     ) -> None:
         try:
             if isinstance(image, sitk.Image): super().__init__(image)
