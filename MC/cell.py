@@ -1,6 +1,7 @@
 from typing import Union
 
 from .surface import Surface
+from .utils import get_dict_params_str
 
 
 class Cell:
@@ -13,7 +14,6 @@ class Cell:
         self.data = kwargs
 
     def __repr__(self) -> str:
-        data_list = [f'{key}={value}\n' for key, value in self.data.items()]
-        data_str = '      ' + '      '.join(data_list)
+        data_str = get_dict_params_str(self.data)
         return f"{self.index}  {self.material}  {self.density}  {self.geom}\n{data_str}"
 
