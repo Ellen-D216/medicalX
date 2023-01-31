@@ -2,13 +2,22 @@ from .utils import get_params_str
 
 
 class Material:
-    def __init__(self, index:int, mt:list=None, *args, **kwargs) -> None:
+    def __init__(self, index:int, composition:list, mt:list=None, **kwargs) -> None:
+        assert len(composition) % 2 == 0
         self.index = index
-        self.zaid = args[0::2]
-        self.farction = args[1::2]
+        self.zaid = composition[0::2]
+        self.farction = composition[1::2]
         self.data = kwargs
 
         self.mt = mt
+
+    def add_composition(self, *composition):
+        assert len(composition) % 2 == 0
+        self.zaid.append(composition[0::2])
+        self.farction.append(composition[1::2])
+
+    def update(self, **kwargs):
+        self.data.update(kwargs)
 
     def __repr__(self) -> str:
         material_list = [f'{zzzaaa} {fraction}\n' for zzzaaa, fraction in zip(self.zaid, self.farction)]

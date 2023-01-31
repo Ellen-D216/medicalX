@@ -1,4 +1,3 @@
-from tkinter import Spinbox
 from .utils import get_params_str, get_dict_params_str
 
 

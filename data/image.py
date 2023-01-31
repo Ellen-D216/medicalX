@@ -10,12 +10,14 @@ from config import ImageType
 class Image(sitk.Image):
     def __init__(
         self,
-        image: Union[str, List[str], sitk.Image],
+        image: Union[str, List[str], sitk.Image, np.ndarray],
         orientation: str = 'LPS',
-        type: str = ImageType.Scalar
+        type: str = ImageType.Scalar,
+        is_vector: bool = False
     ) -> None:
         try:
             if isinstance(image, sitk.Image): super().__init__(image)
+            elif isinstance(image, np.ndarray): super().__init__(sitk.GetImageFromArray(image, is_vector))
             else: super().__init__(io.imread(image, orientation))
         except:
             raise ValueError("Input must be a SimpleITK Image, a file path or a list of file paths!")
