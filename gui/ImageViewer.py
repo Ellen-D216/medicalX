@@ -1,11 +1,14 @@
+from sys import api_version
 from PyQt5 import QtCore, QtWidgets, QtGui
 from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor as QVTKWidget
 import numpy as np
 import os
+import SimpleITK as sitk
 
-from .Ui_ImageViewer import Ui_ImageViewer
 from data import Image
-from utils.viewer import Viewer, OrientationXY, OrientationXZ, OrientationYZ
+from utils.blend import blend
+from .Ui_ImageViewer import Ui_ImageViewer
+from .WidgetViewer import WidgetViewer, OrientationXY, OrientationXZ, OrientationYZ
 
 class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
     def __init__(self) -> None:
@@ -14,17 +17,21 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
         self.menu_mcnp = None
 
         self.image: Image = None
+        self.label_colortable: dict = None
         
         self.setupUi(self)
         self.XYwidget = QVTKWidget(self)
         self.YZwidget = QVTKWidget(self)
         self.XZwidget = QVTKWidget(self)
-        self.XYviewer = Viewer(interactor=self.XYwidget); self.XYviewer.orientation = OrientationXY
-        self.YZviewer = Viewer(interactor=self.YZwidget); self.YZviewer.orientation = OrientationYZ
-        self.XZviewer = Viewer(interactor=self.XZwidget); self.XZviewer.orientation = OrientationXZ
+        self.XYviewer = WidgetViewer(qinteractor=self.XYwidget); self.XYviewer.orientation = OrientationXY
+        self.YZviewer = WidgetViewer(qinteractor=self.YZwidget); self.YZviewer.orientation = OrientationYZ
+        self.XZviewer = WidgetViewer(qinteractor=self.XZwidget); self.XZviewer.orientation = OrientationXZ
+        
         self.vtkGridLayout.addWidget(self.XYwidget, 0, 0, 1, 1)
         self.vtkGridLayout.addWidget(self.YZwidget, 0, 1, 1, 1)
         self.vtkGridLayout.addWidget(self.XZwidget, 1, 0, 1, 1)
+        self.place_holder = QtWidgets.QLabel()
+        self.labelLayout.addWidget(self.place_holder)
 
         self.leVoxelNum.setReadOnly(True)
         self.leVoxelSize.setReadOnly(True)
@@ -37,6 +44,7 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
 
         self.btnOpenFolder.clicked.connect(self.btnOpenFolder_clicked)
         self.btnOpenFile.clicked.connect(self.btnOpenFile_clicked)
+        
         # self.actionChangeSetting.triggered.connect(self.actionChangeSetting_clicked)
 
 
@@ -44,10 +52,9 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
         self.XYviewer.set_image_data(self.image)
         self.YZviewer.set_image_data(self.image)
         self.XZviewer.set_image_data(self.image)
-
-        self.XYviewer.initialize()
-        self.YZviewer.initialize()
-        self.XZviewer.initialize()
+        self.XYviewer.viewer_initialize()
+        self.YZviewer.viewer_initialize()
+        self.XZviewer.viewer_initialize()
 
     def set_connect(self):
         self.spinXY.valueChanged.connect(self.spinSlice_valueChanged)
@@ -56,6 +63,8 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
         self.sliderXY.valueChanged.connect(self.sliderSlice_valueChanged)
         self.sliderYZ.valueChanged.connect(self.sliderSlice_valueChanged)
         self.sliderXZ.valueChanged.connect(self.sliderSlice_valueChanged)
+        self.btnOverlay.clicked.connect(self.btnOverlay_clicked)
+        self.btnReset.clicked.connect(self.btnReset_clicked)
     
     def set_spin_slider(self):
         self.spinXY.setRange(0, self.image.size[2]-1)
@@ -80,6 +89,25 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
             f"{self.image.spacing[0]:.3f}×{self.image.spacing[1]:.3f}×{self.image.spacing[2]:.3f} mm"
         )
 
+    def add_label_colortable(self):
+        qplatte = QtGui.QPalette()
+        self.labelLayout.removeWidget(self.place_holder)
+        for idx, (label_name, setting) in enumerate(self.label_colortable.items()):
+            if label_name == "background": continue
+            rgb = setting[1]
+            name_qlabel = QtWidgets.QLabel()
+            name_qlabel.setText(label_name)
+            name_qlabel.setFont(QtGui.QFont("微软雅黑", 10))
+            color_qlabel = QtWidgets.QLabel()
+            qplatte.setColor(QtGui.QPalette.Background, QtGui.QColor(
+                int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255)
+            ))
+            color_qlabel.setAutoFillBackground(True)
+            color_qlabel.setPalette(qplatte)
+            self.labelLayout.addWidget(name_qlabel, idx, 0)
+            self.labelLayout.addWidget(color_qlabel, idx, 1)
+        self.labelLayout.update()
+
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         super().closeEvent(a0)
         self.XYwidget.Finalize()
@@ -101,7 +129,7 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
     @QtCore.pyqtSlot()
     def btnOpenFile_clicked(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Choose one file", ""
+            self, "Choose one file", "", "Med File(*.nii *.nii.gz *.mhd)"
         )[0]
         if len(file_name):
             self.image = Image(file_name)
@@ -110,6 +138,49 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
             self.set_voxel()
             self.set_connect()
 
+    @QtCore.pyqtSlot()
+    def btnOverlay_clicked(self):
+        file_names = QtWidgets.QFileDialog.getOpenFileNames(
+            self, "Choose files", "", "Med Files(*.nii *.nii.gz *.mhd)"
+        )[0]
+        if len(file_names):
+            labels = dict()
+            for label_file in file_names:
+                label_name = os.path.basename(label_file).partition(".")[0]
+                label = Image(label_file).array
+                if label.shape != self.image.shape:
+                    QtWidgets.QMessageBox.warning(self, "Error", "Label shape is not equal to image!")
+                    return 
+                labels[label_name] = label
+            blend_image_array, self.label_colortable = blend(self.image.array, labels, alpha=0.3)
+            blend_image = sitk.GetImageFromArray(blend_image_array)
+            blend_image.CopyInformation(self.image)
+            self.XYviewer.label_overlay(blend_image)
+            self.XYviewer.set_wlww(127.5, 255.0)
+            self.YZviewer.label_overlay(blend_image)
+            self.YZviewer.set_wlww(127.5, 255.0)
+            self.XZviewer.label_overlay(blend_image)
+            self.XZviewer.set_wlww(127.5, 255.0)
+            self.add_label_colortable()
+
+    @QtCore.pyqtSlot()
+    def btnReset_clicked(self):
+        self.XYviewer.reset()
+        self.XYviewer.set_wlww(0, 2000)
+        self.YZviewer.reset()
+        self.YZviewer.set_wlww(0, 2000)
+        self.XZviewer.reset()
+        self.XZviewer.set_wlww(0, 2000)
+
+        while True:
+            item = self.labelLayout.takeAt(0)
+            if item is not None: 
+                item.widget().deleteLater()
+            else:
+                break
+        self.labelLayout.addWidget(self.place_holder)
+        self.labelLayout.update()
+            
     @QtCore.pyqtSlot()
     def spinSlice_valueChanged(self):
         sender = self.sender()

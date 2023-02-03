@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'e:\Documents\pyScript\medicalX\gui\mainWindow.ui'
+# Form implementation generated from reading ui file 'e:\Documents\pyScript\medicalX\gui\ImageViewer.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -44,6 +44,13 @@ class Ui_ImageViewer(object):
         self.btnOverlay.setFont(font)
         self.btnOverlay.setObjectName("btnOverlay")
         self.verticalLayout.addWidget(self.btnOverlay)
+        self.btnReset = QtWidgets.QPushButton(self.centralwidget)
+        font = QtGui.QFont()
+        font.setFamily("微软雅黑")
+        font.setPointSize(12)
+        self.btnReset.setFont(font)
+        self.btnReset.setObjectName("btnReset")
+        self.verticalLayout.addWidget(self.btnReset)
         self.btnSave = QtWidgets.QPushButton(self.centralwidget)
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
@@ -159,13 +166,14 @@ class Ui_ImageViewer(object):
         self.label_2.setObjectName("label_2")
         self.gridLayout.addWidget(self.label_2, 1, 0, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_2.addItem(spacerItem)
+        self.labelLayout = QtWidgets.QGridLayout()
+        self.labelLayout.setObjectName("labelLayout")
+        self.verticalLayout_2.addLayout(self.labelLayout)
         self.verticalLayout_2.setStretch(0, 2)
         self.verticalLayout_2.setStretch(1, 1)
         self.verticalLayout_2.setStretch(2, 2)
         self.verticalLayout_2.setStretch(3, 2)
-        self.verticalLayout_2.setStretch(4, 4)
+        self.verticalLayout_2.setStretch(4, 8)
         self.horizontalLayout.addLayout(self.verticalLayout_2)
         self.line = QtWidgets.QFrame(self.centralwidget)
         self.line.setFrameShape(QtWidgets.QFrame.VLine)
@@ -213,6 +221,7 @@ class Ui_ImageViewer(object):
         self.btnOpenFolder.setText(_translate("ImageViewer", "Open Folder..."))
         self.btnOpenFile.setText(_translate("ImageViewer", "Open File..."))
         self.btnOverlay.setText(_translate("ImageViewer", "Overlay Label..."))
+        self.btnReset.setText(_translate("ImageViewer", "Reset"))
         self.btnSave.setText(_translate("ImageViewer", "Save As..."))
         self.label_20.setText(_translate("ImageViewer", "XZ"))
         self.label_19.setText(_translate("ImageViewer", "YZ"))

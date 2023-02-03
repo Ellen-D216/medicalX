@@ -13,7 +13,7 @@ class Image(sitk.Image):
         image: Union[str, List[str], sitk.Image, np.ndarray],
         orientation: str = 'LPS',
         type: str = ImageType.Scalar,
-        is_vector: bool = False
+        is_vector: bool = None
     ) -> None:
         try:
             if isinstance(image, sitk.Image): super().__init__(image)

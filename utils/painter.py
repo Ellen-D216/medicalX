@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import PIL.Image as PIL
+from PIL import Image
 import numpy as np
 from typing import Sequence
 
@@ -13,18 +13,24 @@ class Painter:
             self.image = image[..., np.newaxis]
         else:
             self.image = image
-        self.spacing = spacing
+        self.spacing = np.asarray(spacing)
+        if len(self.spacing) == 3:
+            self.aspect = np.asarray(spacing[1]/spacing[0], spacing[2]/spacing[0], spacing[2]/spacing[1])
+        else:
+            self.aspect = spacing[1]/spacing[0]
         
-    def plot(self, **fig_args):
+    def imshow(self, cmap=None, title=None, vmin=None, vmax=None, **fig_args):
         plt.figure(**fig_args)
-        plt.imshow(self.image)
+        plt.imshow(self.image, cmap=cmap, vmin=vmin, vmax=vmax)
+        if cmap is not None: plt.colorbar()
+        if title is not None: plt.title(title)
         plt.axis('off')
         plt.show()
 
     def slice_plot(
         self,
         slice_index: Sequence[int] = None,
-        is_label: bool = False,
+        cmap = None,
         save_path: str = None,
         **fig_args
     ):
@@ -34,18 +40,16 @@ class Painter:
         if slice_index is None:
             slice_index = np.asarray(self.image.shape[:3]) // 2
         k, j, i = slice_index
-        sl, sp, ss = self.spacing
-        cmap = 'cubehelix' if is_label else 'gray'
 
         fig, axes = plt.subplots(1, 3, **fig_args)
         axi_axis, cor_axis, sag_axis = axes
-        axi_axis.imshow(self.image[k, ...], aspect=sp/sl, cmap=cmap)
+        axi_axis.imshow(self.image[k, ...], aspect=self.aspect[0], cmap=cmap)
         axi_axis.axis('off')
         axi_axis.set_title("Axial")
-        cor_axis.imshow(self.image[:, j, ...], aspect=ss/sl, cmap=cmap)
+        cor_axis.imshow(self.image[:, j, ...], aspect=self.aspect[1], cmap=cmap)
         cor_axis.axis('off')
         cor_axis.set_title("Coronal")
-        sag_axis.imshow(self.image[:, :, i, ...], aspect=ss/sp, cmap=cmap)
+        sag_axis.imshow(self.image[:, :, i, ...], aspect=self.aspect[2], cmap=cmap)
         sag_axis.axis('off')
         sag_axis.set_title("Sagittal")
         if save_path is not None:
@@ -56,31 +60,21 @@ class Painter:
     def dynamic_plot(
         self,
         show_axis: int,
-        is_label: bool = False,
+        cmap = None,
+        **fig_kwargs
     ):
         '''
             image: D H W [C]
         '''
         from IPython.display import clear_output
-        cmap = 'cubehelix' if is_label else 'gray'
-        plt.figure(dpi=100)
-        for i in range(self.image.shape[show_axis]):
-            if show_axis == 0:
-                plt.imshow(
-                    self.image[i, ...], cmap=cmap, vmin=self.image.min(), vmax=self.image.max(),
-                    aspect=self.spacing[2]/self.spacing[1]
-                )
-            elif show_axis == 1:
-                plt.imshow(
-                    self.image[:, i, ...], cmap=cmap, vmin=self.image.min(), vmax=self.image.max(),
-                    aspect=self.spacing[2]/self.spacing[0]
-                )
-            elif show_axis == 2:
-                plt.imshow(
-                    self.image[:, :, i, ...], cmap=cmap, vmin=self.image.min(), vmax=self.image.max(),
-                    aspect=self.spacing[1]/self.spacing[0]
-                )
-            plt.axis('off')
+        plt.figure(**fig_kwargs)
+        plt.axis('off')
+        image = self.image.swapaxes(0, show_axis)
+        for i in range(image.shape[0]):
+            plt.imshow(
+                self.image[i, ...], cmap=cmap, vmin=image.min(), vmax=image.max(),
+                aspect=self.aspect[show_axis]
+            )
             clear_output(True)
             plt.show()
 
@@ -91,6 +85,7 @@ class Painter:
         show_axis: int,
         padding: int = 2,
         padding_value: int = -1024,
+        cmap = None,
         save_path: str = None,
         **fig_args
     ):
@@ -113,7 +108,6 @@ class Painter:
                 grid[y*height:(y+1)*height-padding, x*width:(x+1)*width-padding, :] = image[k]
                 k += 1
 
-        cmap = 'gray' if channels == 1 else None
         plt.figure(**fig_args)
         plt.imshow(grid, cmap=cmap, vmin=image.min(), vmax=image.max())
         plt.axis('off')
@@ -137,11 +131,16 @@ class Painter:
         image = self.image.swapaxes(0, show_axis)
         if single_channel:
             image = np.squeeze(image, axis=-1)
-        image = ((image - image.min()) / image.max() * 255).astype(np.uint8)
+        image -= image.min(); image /= image.max(); image *= 255
+        image = image.astype(np.uint8)
         mode = "P" if single_channel else "RGB"
         duration_ms = duration / image.shape[0] * 1000
-        images = [PIL.fromarray(i).convert(mode) for i in image]
+        images = [Image.fromarray(i, mode=mode) for i in image]
         images[0].save(
             save_path, save_all=True, append_images=images[1:], optimize=optimize,
             duration=duration_ms, loop=loop
         )
+
+
+def get_colormap(cmap:str, category:int=None):
+    return plt.cm.get_cmap(cmap, category)

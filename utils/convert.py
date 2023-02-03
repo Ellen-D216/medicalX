@@ -1,8 +1,8 @@
 import SimpleITK as sitk
 from vtkmodules.util import numpy_support
-from vtkmodules.all import vtkImageData, VTK_SHORT
+from vtkmodules.all import vtkImageData, VTK_SHORT, VTK_UNSIGNED_CHAR
 import numpy as np
-# import itk
+import itk
 from typing import List, Sequence
 
 # def ConvertItkImageToSimpleItkImage(_itk_image: itk.Image, _pixel_id_value: int, _direction: List[float]) -> sitk.Image:
@@ -90,14 +90,49 @@ def numpy_to_vtk(
         direction:Sequence[int],
         vtk_data_type = VTK_SHORT
     ):
-        assert len(numpy_data.shape) == 3
-        shape = numpy_data.shape[::-1]
-        vtk_image = numpy_support.numpy_to_vtk(numpy_data.ravel(), 1, vtk_data_type)
+        assert len(numpy_data.shape) in (2, 3, 4)
+        shape = numpy_data.shape
+        if len(shape) == 2 or (len(shape) == 3 and not shape[-1] in (3, 4)):
+            numpy_data = numpy_data[..., np.newaxis]
+        size = list(numpy_data.shape[:-1][::-1])
+        spacing = list(spacing)
+        origin = list(origin)
+        direction = list(direction)
+        channel = numpy_data.shape[-1]
+
+        if len(size) == 2:
+            size.append(1)
+
+        if len(origin) == 2:
+            origin.append(0.0)
+
+        if len(spacing) == 2:
+            spacing.append(spacing[0])
+
+        if len(direction) == 4:
+            direction = [
+                direction[0],
+                direction[1],
+                0.0,
+                direction[2],
+                direction[3],
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+            ]
 
         image_data = vtkImageData()
-        image_data.SetDimensions(shape)
+        image_data.SetDimensions(size)
         image_data.SetSpacing(spacing)
         image_data.SetOrigin(origin)
         image_data.SetDirectionMatrix(direction)
+        if channel == 1:
+            vtk_image = numpy_support.numpy_to_vtk(numpy_data.ravel(), 1, vtk_data_type)
+        else:
+            temp = numpy_data.reshape((-1, channel))
+            vtk_image = numpy_support.numpy_to_vtk(temp, 1, vtk_data_type)
+        vtk_image.SetNumberOfComponents(channel)
         image_data.GetPointData().SetScalars(vtk_image)
+        image_data.Modified()
         return image_data
