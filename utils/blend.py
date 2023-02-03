@@ -16,7 +16,7 @@ def convert_label_to_labelmap(labels:Dict[str, np.ndarray], cmap:str="jet"):
     labelmap = colormap(labelmap)[..., :3]
     return labelmap, colortable
 
-def blend(image:np.ndarray, labels:Dict[str, np.ndarray], cmap:str="jet", alpha:float=0.5):
+def image_blend(image:np.ndarray, labels:Dict[str, np.ndarray], cmap:str="jet", alpha:float=0.5):
     shape = image.shape
     image = image.astype(np.float64)
     image = image - image.min(); image = image / image.max()

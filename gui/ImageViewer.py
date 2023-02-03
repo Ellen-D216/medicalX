@@ -6,7 +6,7 @@ import os
 import SimpleITK as sitk
 
 from data import Image
-from utils.blend import blend
+from utils.blend import image_blend
 from .Ui_ImageViewer import Ui_ImageViewer
 from .WidgetViewer import WidgetViewer, OrientationXY, OrientationXZ, OrientationYZ
 
@@ -97,14 +97,14 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
             rgb = setting[1]
             name_qlabel = QtWidgets.QLabel()
             name_qlabel.setText(label_name)
-            name_qlabel.setFont(QtGui.QFont("微软雅黑", 10))
+            name_qlabel.setFont(QtGui.QFont("微软雅黑", 12))
             color_qlabel = QtWidgets.QLabel()
             qplatte.setColor(QtGui.QPalette.Background, QtGui.QColor(
                 int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255)
             ))
             color_qlabel.setAutoFillBackground(True)
             color_qlabel.setPalette(qplatte)
-            self.labelLayout.addWidget(name_qlabel, idx, 0)
+            self.labelLayout.addWidget(name_qlabel, idx, 0, QtCore.Qt.AlignRight)
             self.labelLayout.addWidget(color_qlabel, idx, 1)
         self.labelLayout.update()
 
@@ -152,7 +152,7 @@ class ImageViewer(QtWidgets.QMainWindow, Ui_ImageViewer):
                     QtWidgets.QMessageBox.warning(self, "Error", "Label shape is not equal to image!")
                     return 
                 labels[label_name] = label
-            blend_image_array, self.label_colortable = blend(self.image.array, labels, alpha=0.3)
+            blend_image_array, self.label_colortable = image_blend(self.image.array, labels, alpha=0.3)
             blend_image = sitk.GetImageFromArray(blend_image_array)
             blend_image.CopyInformation(self.image)
             self.XYviewer.label_overlay(blend_image)
