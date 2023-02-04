@@ -153,7 +153,7 @@ cython_debug/
 
 *.ui
 /rawData
-/test
+/deprecated
 medicalX.xmind
 test.ipynb
-test.py
+try.py
