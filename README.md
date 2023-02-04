@@ -10,4 +10,4 @@ A medical image processing library primarily based on SimpleITK.
 4. pipeline for PyTorch
 
 > requirements:
-> numpy, SimpleITK, numpy, PyQt5, PyQtGraph, matplotlib, torch
+> SimpleITK, numpy, PyQt5, PyQtGraph, matplotlib, torch
