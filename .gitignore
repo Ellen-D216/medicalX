@@ -152,6 +152,8 @@ cython_debug/
 #.idea/
 
 *.ui
+/rawData
+/test
 medicalX.xmind
 test.ipynb
 test.py
